@@ -7,7 +7,7 @@ const config = {
   kit: {
     adapter: adapter(),
     paths: {
-      base: dev ? '' : '/spencerm/svelte-test',
+      base: dev ? '' : '/spencerm/spencerm.github.io',
     }
   }
 };
