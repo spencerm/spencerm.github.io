@@ -1,95 +1,141 @@
 <script lang="ts">
-    import Box from "./Box.svelte";
-    import Lane from "./Lane.svelte";
     import { onMount, onDestroy } from "svelte";
 
+    import { writable } from "svelte/store";
+
+    // export let appName: string;
+    import Lane from "../components/Lane.svelte";
+    // import Stopwatch from "../components/Stopwatch.svelte";
+    import { chunkArr, getRandomInt } from "../utils";
+    import type {
+        Box,
+        Component,
+        IPlayChit,
+        ITimeInfo,
+        Status,
+    } from "../types";
+
     let config = {
-        lanes: 8,
+        laneNumber: 8,
         gameLength: 1000 * 60 * 8, // 8 minutes
-    }
-    const colors = ["red", "green", "blue", "yellow", "purple"]
-    let enabled = false
-    let countdown = 0
-    let intervalId = 0
-    let boxes = []
+    };
+    // State stuff
+    // let stopwatch: Stopwatch;
+    let gameStatus: Status = "new";
+    let gameDuration: ITimeInfo = {
+        ms: 0,
+        secs: 0,
+        mins: 0,
+    };
+    let lastTime = 0;
+    let lanes: number[] = Array(7).fill(0);
+    let boxes: Box[] = [];
 
-    function tick() {
-        countdown --
-
-        if( countdown % 50 === 0 ) {
-            const color = colors[Math.floor(Math.random() * colors.length)]
-            const x = Math.floor(Math.random() * window.innerWidth)
-            const y = Math.floor(Math.random() * window.innerHeight)
-            const box = { color, x, y, vx: 1, vy: 1 }
-            boxes = [...boxes, box]
+    const tick = (time: number) => {
+        const deltaTime = time - lastTime;
+        lastTime = time;
+        for (const box of boxes) {
+            // box.update(deltaTime);
         }
-        
+
+        if (Math.floor(time / 1000) % 5 === 0) {
+            console.log("adding box");
+            addBox();
+        }
+
+        if (gameStatus === "active") {
+            requestAnimationFrame(tick);
+        }
+    };
+
+    function handleClick(box: Box) {
+        console.info("removeBox", box);
+        boxes = boxes.filter((b) => b !== box);
     }
 
-    function removeBox(index) {
-        console.info("removeBox", index)
-        boxes = boxes.filter((_, i) => i !== index)
-    }
-
-    function animate() {
-        boxes = boxes.map((box, i) => {
-            const x = box.x + box.vx
-            const y = box.y + box.vy
-            const vx = x < 0 || x > window.innerWidth ? -box.vx : box.vx
-            const vy = y < 0 || y > window.innerHeight ? -box.vy : box.vy
-            return { ...box, x, y, vx, vy };
-        });
-        requestAnimationFrame(animate);
-    }
-
-    function clear() {
-        clearInterval(intervalId)
-        boxes = []
-        enabled = false
+    function stop() {
+        gameStatus = "new";
+        boxes = [];
     }
 
     function start() {
-        if (!enabled) {
-            intervalId = setInterval(tick, 100)
-            countdown = config.gameLength / 100
-            enabled = true
+        if (gameStatus === "active") {
+            return;
         }
+        gameStatus = "active";
+        requestAnimationFrame(tick);
+        // countdown = config.gameLength / 100
     }
 
-    onMount(() => {
-        requestAnimationFrame(animate);
-        return () => clearInterval(intervalId);
-    });
+    // const generateBoxes = () => {
+    //     const colors = ["red", "green", "blue", "yellow", "purple"];
+    //     const values = [1, 1, 2, 2, 3, 4, 5];
+    //     const boxes: IPlayChit[] = [];
+    //     colors.forEach((color) => {
+    //         values.forEach((value, i) => {
+    //             boxes.push({
+    //                 key: `${color}-${i}`,
+    //                 value: value,
+    //                 color: color,
+    //                 status: "new",
+    //             });
+    //         });
+    //     });
+    //     // shuffleArray(cards)
 
-    onDestroy(() => {
-        clearInterval(intervalId);
-    });
+    //     lanes = chunkArr(boxes, config.laneNumber, true);
+    // };
+
+    function addBox() {
+        const laneIndex = Math.floor(Math.random() * config.laneNumber);
+        const value = Math.floor(Math.random() * 5) + 1;
+        boxes = [...boxes, { laneIndex, color: "red", value, y: -10 }];
+    }
 </script>
 
 <div id="container">
-
-    <div style="display:flex; flex-direction: row; align-items: center;">
-    {#if enabled === false}
-        <button on:click={start}>Start</button>
-    {:else}
-        <button on:click={clear}>Stop</button>
-        <h4>{(countdown / 60).toFixed(3)}</h4>
-    {/if}
+    <div
+        style="display:flex; flex-direction: column; align-items: center; width: 90px;"
+    >
+        {#if gameStatus === "new"}
+            <button on:click={start}>Start</button>
+        {:else}
+            <button on:click={stop}>Stop</button>
+            <h4>{lastTime.toFixed(1)}</h4>
+        {/if}
+        <h4>{gameStatus}</h4>
     </div>
 
-    {#each Array(config.lanes) as _, i}
-        <Lane width={100 / config.lanes} x={i*100 / config.lanes} />
+    {#each lanes as _, i}
+        <Lane index={i}>
+            {#each boxes.filter((b) => b.laneIndex === i) as box}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    style="
+              position: absolute;
+              top: {box.y}px;
+              background-color: {box.color};
+              width: 30px;
+              height: 30px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              border-radius: 50%;
+              cursor: pointer;
+            "
+                    on:click={() => handleClick(box)}
+                >
+                    {box.value}
+                </div>
+            {/each}
+        </Lane>
     {/each}
-
-    {#each boxes as box, i}
-        <Box color={box.color} x={box.x} y={box.y} on:remove={() => removeBox(i)} />
-    {/each}
-
 </div>
 
 <style>
     #container {
         position: absolute;
+        display: flex;
         top: 0;
         left: 0;
         width: 100vw;
