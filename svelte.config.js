@@ -10,7 +10,11 @@ const config = {
   preprocess: preprocess({
     // ...svelte-preprocess options
   }),
-  // ...other svelte options
+  kit: {
+    alias: {
+        'components': 'src/components',
+    }
+}
 };
 
 export default config;

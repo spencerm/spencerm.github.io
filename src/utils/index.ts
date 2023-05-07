@@ -1,3 +1,33 @@
+import { get } from 'svelte/store';
+import type { Bug } from "../types";
+import { bugsCount, lanesCount } from '../lib/stores.js';
+
+export const generateBugs = () => {
+	const totalLanes: number = get(lanesCount);
+	const bugsC: number = get(bugsCount);
+	let bugsIncrement: number = 0;
+	let bugs: Array<Bug> = [];
+
+	for (let lane = 1; lane <= totalLanes; lane++) {
+
+		for (let bug = totalLanes; bug > 0; bug--) {
+			bugsIncrement++;
+			if (bugsIncrement > bugsC) continue;
+			bugs.push({
+				key: lane.toString() + bug.toString(),
+				laneIndex: bug,
+				delay: getRandomInt(0, 500) + (lane - 1) * 5000,
+				color: "red",
+				value: lane.toString(),
+				lifespan: 5000,
+				isTapable: false,
+				isMovesUp: Math.random() > .5 ? false : true,
+			})
+		}
+	}
+	return bugs;
+}
+
 /**
  * Randomly shuffle array *in-place*
  * @param array Array to shuffle

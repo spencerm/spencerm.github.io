@@ -1,46 +1,48 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
 
-    import { writable } from "svelte/store";
-
     // export let appName: string;
     import Lane from "../components/Lane.svelte";
+    import Bug from "../components/Bug.svelte";
     // import Stopwatch from "../components/Stopwatch.svelte";
-    import { chunkArr, getRandomInt } from "../utils";
-    import type {
-        Box,
-        Component,
-        IPlayChit,
-        ITimeInfo,
-        Status,
-    } from "../types";
+    import { generateBugs, getRandomInt } from "../utils";
+    import type { Component, IPlayChit, ITimeInfo, Status } from "../types";
+    // svgs
+    import SVGplay from "../svgs/play.svelte";
+    import SVGstop from "../svgs/stop.svelte";
+    import SVGsettings from "../svgs/settings.svelte";
 
     let config = {
-        laneNumber: 8,
+        lifespan: 5000, //todo: list 
+        laneNumber: new Array(8),
+        bugsNumber: new Array(30),
         gameLength: 1000 * 60 * 8, // 8 minutes
     };
     // State stuff
-    // let stopwatch: Stopwatch;
     let gameStatus: Status = "new";
-    let gameDuration: ITimeInfo = {
-        ms: 0,
-        secs: 0,
-        mins: 0,
-    };
+    let startTime = 0;
     let lastTime = 0;
-    let lanes: number[] = Array(7).fill(0);
-    let boxes: Box[] = [];
+    let bugs = [];
 
-    const tick = (time: number) => {
-        const deltaTime = time - lastTime;
-        lastTime = time;
-        for (const box of boxes) {
-            // box.update(deltaTime);
+    const tick = (timestamp: number) => {
+        if (startTime === 0) {
+            startTime = timestamp;
+        }
+        lastTime = timestamp - startTime;
+        bugs.forEach((bug) => {
+            if (bug.tapable === false && lastTime > (bug.delay + bug.lifespan)) {
+                bug.tapable = true;
+                bug.value = bug.value + 1;
+            }
+        });
+        bugs = bugs;
+
+        if (Math.floor(timestamp / 1000) % 5 === 0) {
+            // addBox();
         }
 
-        if (Math.floor(time / 1000) % 5 === 0) {
-            console.log("adding box");
-            addBox();
+        if (lastTime > config.lifespan * 5) {
+            stop();
         }
 
         if (gameStatus === "active") {
@@ -48,98 +50,55 @@
         }
     };
 
-    function handleClick(box: Box) {
-        console.info("removeBox", box);
-        boxes = boxes.filter((b) => b !== box);
-    }
-
     function stop() {
         gameStatus = "new";
-        boxes = [];
+        startTime = 0;
+        bugs = [];
     }
 
     function start() {
         if (gameStatus === "active") {
             return;
         }
+        bugs = generateBugs();
+        console.info(bugs);
         gameStatus = "active";
         requestAnimationFrame(tick);
         // countdown = config.gameLength / 100
     }
 
-    // const generateBoxes = () => {
-    //     const colors = ["red", "green", "blue", "yellow", "purple"];
-    //     const values = [1, 1, 2, 2, 3, 4, 5];
-    //     const boxes: IPlayChit[] = [];
-    //     colors.forEach((color) => {
-    //         values.forEach((value, i) => {
-    //             boxes.push({
-    //                 key: `${color}-${i}`,
-    //                 value: value,
-    //                 color: color,
-    //                 status: "new",
-    //             });
-    //         });
-    //     });
-    //     // shuffleArray(cards)
-
-    //     lanes = chunkArr(boxes, config.laneNumber, true);
-    // };
-
-    function addBox() {
-        const laneIndex = Math.floor(Math.random() * config.laneNumber);
-        const value = Math.floor(Math.random() * 5) + 1;
-        boxes = [...boxes, { laneIndex, color: "red", value, y: -10 }];
-    }
 </script>
 
-<div id="container">
-    <div
-        style="display:flex; flex-direction: column; align-items: center; width: 90px;"
-    >
+<div id="container" class="flex w-screen h-screen">
+    <div id="controls" class="flex flex-col justify-center items-center w-16">
         {#if gameStatus === "new"}
-            <button on:click={start}>Start</button>
+            <button class="cursor-pointer" on:click={start}><SVGplay/></button>
+            <a class="cursor-pointer" href="/settings"><SVGsettings/></a>
         {:else}
-            <button on:click={stop}>Stop</button>
+            <button on:click={stop}><SVGstop/></button>
+            <h4>{startTime.toFixed(1)}</h4>
             <h4>{lastTime.toFixed(1)}</h4>
         {/if}
         <h4>{gameStatus}</h4>
     </div>
 
-    {#each lanes as _, i}
-        <Lane index={i}>
-            {#each boxes.filter((b) => b.laneIndex === i) as box}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    style="
-              position: absolute;
-              top: {box.y}px;
-              background-color: {box.color};
-              width: 30px;
-              height: 30px;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              border-radius: 50%;
-              cursor: pointer;
-            "
-                    on:click={() => handleClick(box)}
-                >
-                    {box.value}
-                </div>
-            {/each}
-        </Lane>
+    {#each config.laneNumber as _, i}
+        <Lane index={i} />
     {/each}
+
+    {#if gameStatus === "active"}
+        {#each bugs as bug, i}
+            <Bug
+                value={bug.value}
+                isTapable={bug.isTapable}
+                isMovesUp={bug.isMovesUp}
+                --scale={getRandomInt(2, 3.5) / 10}
+                --offset="{((bug.laneIndex + 0.5) / config.laneNumber.length) *
+                    100}%"
+                --delay="{bug.delay}ms"
+                --speed="{getRandomInt(10, 15)}s"
+            />
+        {/each}
+    {/if}
 </div>
 
-<style>
-    #container {
-        position: absolute;
-        display: flex;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: rgb(57, 34, 17);
-    }
-</style>

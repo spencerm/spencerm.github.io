@@ -22,9 +22,13 @@ export interface ITimeInfo {
 	days?: number;
 }
 
-export interface Box {
+export interface Bug {
+	key: string;
 	laneIndex: number;
 	color: string;
-	value: number;
-	y: number;
+	value: string;
+	delay: number;
+	lifespan: number;
+	isTapable: false;
+	isMovesUp: true;
 }
