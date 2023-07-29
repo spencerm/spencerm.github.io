@@ -1,28 +1,36 @@
 import { get } from 'svelte/store';
 import type { Bug } from "../types";
-import { bugsCount, lanesCount } from '../lib/stores.js';
+import { bugsCount, lanesCount, waveCount } from '../lib/stores.js';
 
 export const generateBugs = () => {
-	const totalLanes: number = get(lanesCount);
-	const bugsC: number = get(bugsCount);
+	const config = {
+        lifespan: 5000,
+        totalLanes: <number> get(lanesCount),
+        totalBugs: <number> get(bugsCount),
+		totalWaves: <number> get(waveCount),
+    };
 	let bugsIncrement: number = 0;
 	let bugs: Array<Bug> = [];
+	let moveUp = false; // ensure even distribution of bugs moving up and down
 
-	for (let lane = 1; lane <= totalLanes; lane++) {
-
-		for (let bug = totalLanes; bug > 0; bug--) {
-			bugsIncrement++;
-			if (bugsIncrement > bugsC) continue;
-			bugs.push({
-				key: lane.toString() + bug.toString(),
-				laneIndex: bug,
-				delay: getRandomInt(0, 500) + (lane - 1) * 5000,
-				color: "red",
-				value: lane.toString(),
-				lifespan: 5000,
-				isTapable: false,
-				isMovesUp: Math.random() > .5 ? false : true,
-			})
+	for (let wave = 1; wave <= config.totalWaves; wave++) {
+		for (let lane = 1; lane <= config.totalLanes; lane++) {
+			if (Math.random() >= .25){ // skip 25% of the time
+				bugsIncrement++
+				if (bugsIncrement > config.totalBugs) continue;
+				let lifespan = config.lifespan * getRandomInt(1, 4);
+				bugs.push({
+					key: wave.toString() + lane.toString(),
+					laneIndex: lane - 1,
+					delay: (wave - 1) * config.lifespan + getRandomInt(1, wave * config.lifespan),
+					color: Math.random() >= .5 ? "FireBrick" : "Indigo",
+					value: wave.toString() + "." + lane.toString(),
+					lifespan: lifespan,
+					isTapable: false,
+					isMovesUp: moveUp
+				})
+				moveUp = !moveUp
+			}
 		}
 	}
 	return bugs;

@@ -1,22 +1,23 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import { get } from 'svelte/store';
 
-    // export let appName: string;
     import Lane from "../components/Lane.svelte";
     import Bug from "../components/Bug.svelte";
-    // import Stopwatch from "../components/Stopwatch.svelte";
     import { generateBugs, getRandomInt } from "../utils";
-    import type { Component, IPlayChit, ITimeInfo, Status } from "../types";
+    import type { Status } from "../types";
     // svgs
     import SVGplay from "../svgs/play.svelte";
     import SVGstop from "../svgs/stop.svelte";
     import SVGsettings from "../svgs/settings.svelte";
+    // state
+    import { bugsCount, lanesCount, gameLength } from '../lib/stores.js';
+
 
     let config = {
-        lifespan: 5000, //todo: list 
-        laneNumber: new Array(8),
-        bugsNumber: new Array(30),
-        gameLength: 1000 * 60 * 8, // 8 minutes
+        lifespan: 5000, //todo: refactor as list 
+        totalLanes: <number> get(lanesCount),
+        totalBugs: <number> get(bugsCount),
+        gameLength: <number> get(gameLength)
     };
     // State stuff
     let gameStatus: Status = "new";
@@ -30,18 +31,18 @@
         }
         lastTime = timestamp - startTime;
         bugs.forEach((bug) => {
-            if (bug.tapable === false && lastTime > (bug.delay + bug.lifespan)) {
-                bug.tapable = true;
-                bug.value = bug.value + 1;
+            // tapable zone is 40% of screen; 66% of lifespan
+            if (bug.isTapable === false && lastTime > (bug.delay + bug.lifespan * 3/7) ) {
+                bug.isTapable = true;
             }
         });
         bugs = bugs;
 
-        if (Math.floor(timestamp / 1000) % 5 === 0) {
-            // addBox();
-        }
+        // if (Math.floor(timestamp / 1000) % 5 === 0) {
+        //     add();
+        // }
 
-        if (lastTime > config.lifespan * 5) {
+        if (lastTime > config.gameLength) {
             stop();
         }
 
@@ -64,26 +65,27 @@
         console.info(bugs);
         gameStatus = "active";
         requestAnimationFrame(tick);
-        // countdown = config.gameLength / 100
     }
+
+    // css
+    export const wobbleWidth = `${config.totalLanes / 100}%`;
+
 
 </script>
 
 <div id="container" class="flex w-screen h-screen">
-    <div id="controls" class="flex flex-col justify-center items-center w-16">
+    <div id="controls" class="absolute flex flex-col justify-center items-center w-16">
         {#if gameStatus === "new"}
             <button class="cursor-pointer" on:click={start}><SVGplay/></button>
             <a class="cursor-pointer" href="/settings"><SVGsettings/></a>
         {:else}
             <button on:click={stop}><SVGstop/></button>
-            <h4>{startTime.toFixed(1)}</h4>
             <h4>{lastTime.toFixed(1)}</h4>
         {/if}
-        <h4>{gameStatus}</h4>
     </div>
 
-    {#each config.laneNumber as _, i}
-        <Lane index={i} />
+    {#each {length: config.totalLanes} as _, i}
+        <Lane/>
     {/each}
 
     {#if gameStatus === "active"}
@@ -92,13 +94,28 @@
                 value={bug.value}
                 isTapable={bug.isTapable}
                 isMovesUp={bug.isMovesUp}
-                --scale={getRandomInt(2, 3.5) / 10}
-                --offset="{((bug.laneIndex + 0.5) / config.laneNumber.length) *
-                    100}%"
+                --color="{bug.color}"
+                --scale={(bug.lifespan / 25000).toFixed(2)}
+                --offset="{(bug.laneIndex ) * (100 / config.totalLanes) + (100 / config.totalLanes / 2)}%"
                 --delay="{bug.delay}ms"
-                --speed="{getRandomInt(10, 15)}s"
+                --speed="{bug.lifespan}ms"
             />
         {/each}
     {/if}
 </div>
 
+<style global>
+    :root{
+        --position-multipler: -1;
+        --wobble-width: 10px
+    }
+    .bug {
+        border-radius: 100%;
+        /* box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2), inset 0px 5px 15px 2px rgba(255, 255, 255, 1); */
+        backdrop-filter: blur(1px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+</style>

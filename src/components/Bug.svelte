@@ -7,16 +7,18 @@
     const tap = () => {
         if (isTapable) {
             isActive = false;
+            console.log('killed ' + value);
         }
     };
     const die = () => {
         isActive = false;
+        console.log(value + ' died by timeout');
     }
     const classes = () => {
         if (isMovesUp){
-            return 'positioner move-up'
+            return 'fixed positioner move-up'
         } else {
-            return 'positioner move-down'
+            return 'fixed positioner move-down'
         }
     }
 </script>
@@ -25,7 +27,7 @@
     <div class={classes()} on:animationend={die}>
         <div class="positioner-inner">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="bubble" on:click={tap}>
+            <div class="bug" on:click={tap}>
                 {value}
             </div>
         </div>
@@ -36,38 +38,29 @@
     .positioner {
         --bubble-size: calc(200px * var(--scale));
         position: fixed;
-        z-index: var(--zindex, 99);
-        left: var(--offset);
+        z-index: 99;
+        left: calc(var(--offset) - var(--bubble-size)/2);
     }
     .move-up {
         animation: moveup var(--speed) linear forwards;
         animation-delay: var(--delay);
-        bottom: calc(var(--bubble-size) * -2);
+        bottom: calc(var(--bubble-size) * var(--position-multipler));
     }
     .move-down {
         animation: movedown var(--speed) linear forwards;
         animation-delay: var(--delay);
-        top: calc(var(--bubble-size) * -2);
+        top: calc(var(--bubble-size) * var(--position-multipler));
     }
 
     .positioner-inner {
-        animation: wobble 2s ease-in-out alternate infinite;
+        animation: wobble calc(var(--speed) / 3) ease-in-out alternate infinite;
         animation-delay: inherit;
     }
 
-    .bubble {
+    .bug {
         width: var(--bubble-size);
         height: var(--bubble-size);
-
-        border-radius: 100%;
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2),
-            inset 0px 5px 15px 2px rgba(255, 255, 255, 1);
-
-        backdrop-filter: blur(1px);
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        background: var(--color);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -84,7 +77,7 @@
         to {
             transform: translate3d(
                 0,
-                calc((-2.5 * var(--bubble-size)) - 60vh),
+                calc( -70vh + var(--position-multipler) * var(--bubble-size) / 2 ),
                 0
             );
         }
@@ -98,7 +91,7 @@
         to {
             transform: translate3d(
                 0,
-                calc((-2.5 * var(--bubble-size)) + 70vh),
+                calc( 70vh - var(--position-multipler) * var(--bubble-size) / 2 ),
                 0
             );
         }
@@ -110,7 +103,7 @@
         }
 
         to {
-            transform: translate3d(42px, 0, 0);
+            transform: translate3d(30px, 0, 0);
         }
     }
 </style>
