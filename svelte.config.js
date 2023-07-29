@@ -1,13 +1,29 @@
+// svelte.config.js
+import preprocess from 'svelte-preprocess';
 import adapter from '@sveltejs/adapter-static';
 
-const dev = process.argv.includes('dev');
-
-/** @type {import('@sveltejs/kit').Config} */
+/** 
+ * This will add autocompletion if you're working with SvelteKit
+ * 
+ * @type {import('@sveltejs/kit').Config} 
+ */
 const config = {
-    kit: {
-        adapter: adapter(),
-        paths: {
-            base: '',
-        }
-    }
+  preprocess: preprocess({
+    // ...svelte-preprocess options
+  }),
+  kit: {
+    alias: {
+        'components': 'src/components',
+    },
+    adapter: adapter({
+      // default options are shown. On some platforms
+      // these options are set automatically — see below
+      pages: 'build',
+      assets: 'build',
+      fallback: undefined,
+      precompress: false
+  })
+}
 };
+
+export default config;
