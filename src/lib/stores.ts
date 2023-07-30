@@ -14,6 +14,7 @@ function createLanesCount() {
 export const lanesCount = createLanesCount();
 
 function createBugsCount() {
+	//todo: move bugs creation here
 	const { subscribe, set, update } = writable(30);
 
 	return {
@@ -39,15 +40,28 @@ function createGameLength() {
 
 export const gameLength = createGameLength();
 
-function createWavesCount() {
-	const { subscribe, set, update } = writable(7);
+function createLifespanCount() {
+	const { subscribe, set, update } = writable(5000);
+
+	return {
+		subscribe,
+		increment: () => update(n => n + 250),
+		decrement: () => update(n => n - 250),
+		reset: () => set(5000)
+	};
+}
+
+export const lifespanCount = createLifespanCount();
+
+function createKillsCount() {
+	const { subscribe, set, update } = writable(0);
 
 	return {
 		subscribe,
 		increment: () => update(n => n + 1),
 		decrement: () => update(n => n - 1),
-		reset: () => set(7)
+		reset: () => set(0)
 	};
 }
 
-export const waveCount = createWavesCount();
+export const killCount = createKillsCount();

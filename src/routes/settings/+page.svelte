@@ -1,6 +1,6 @@
 <script lang="ts">
     import SVGclose from '../../svgs/close.svelte';
-    import { lanesCount, bugsCount, gameLength, waveCount } from '$lib/stores';
+    import { lanesCount, bugsCount, lifespanCount } from '$lib/stores';
 </script>
 
 <div class="max-w-md my-8 m-auto relative font-mono">
@@ -53,45 +53,22 @@
         </div>
     </div>
     <div class="flex mb-4">
-        <p>Waves of Bugs: {$waveCount}</p>
+        <p>Bug lifespan, <br>in milliseconds: {$lifespanCount}</p>
         <div class="ml-auto">
             <button 
-                on:click={() => waveCount.increment()}
+                on:click={() => lifespanCount.increment()}
                 class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
             >
                 +
             </button>
             <button 
-                on:click={() => waveCount.decrement()}
+                on:click={() => lifespanCount.decrement()}
                 class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
             >
                 -
             </button>
             <button 
-                on:click={() => waveCount.reset()}
-                class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-                Reset
-            </button>
-        </div>
-    </div>
-    <div class="flex mb-4">
-        <p>Duration: {$gameLength}</p>
-        <div class="ml-auto">
-            <button 
-                on:click={() => gameLength.increment()}
-                class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-                +
-            </button>
-            <button 
-                on:click={() => gameLength.decrement()}
-                class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-                -
-            </button>
-            <button 
-                on:click={() => gameLength.reset()}
+                on:click={() => lifespanCount.reset()}
                 class="middle none center rounded-lg bg-blue-500 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
             >
                 Reset

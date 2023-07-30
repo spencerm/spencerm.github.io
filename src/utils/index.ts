@@ -1,21 +1,22 @@
 import { get } from 'svelte/store';
 import type { Bug } from "../types";
-import { bugsCount, lanesCount, waveCount } from '../lib/stores.js';
+import { bugsCount, lanesCount, lifespanCount } from '../lib/stores.js';
 
 export const generateBugs = () => {
 	const config = {
-        lifespan: 5000,
+        lifespan: <number> get(lifespanCount),
         totalLanes: <number> get(lanesCount),
         totalBugs: <number> get(bugsCount),
-		totalWaves: <number> get(waveCount),
     };
 	let bugsIncrement: number = 0;
 	let bugs: Array<Bug> = [];
 	let moveUp = false; // ensure even distribution of bugs moving up and down
+	const percentOfBugsToSkip = .25;
+	const totalWaves = Math.ceil((1 + percentOfBugsToSkip) * config.totalBugs / config.totalLanes) + 1;
 
-	for (let wave = 1; wave <= config.totalWaves; wave++) {
+	for (let wave = 1; wave <= totalWaves; wave++) {
 		for (let lane = 1; lane <= config.totalLanes; lane++) {
-			if (Math.random() >= .25){ // skip 25% of the time
+			if (Math.random() >= percentOfBugsToSkip){
 				bugsIncrement++
 				if (bugsIncrement > config.totalBugs) continue;
 				let lifespan = config.lifespan * getRandomInt(1, 4);
