@@ -1,0 +1,13 @@
+{
+    "name": "Test Name",
+    "short_name": "TestName",
+    "start_url": "https://spencerm.github.io/",
+    "display": "standalone",
+    "icons": [
+        {
+            "src": "/logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
